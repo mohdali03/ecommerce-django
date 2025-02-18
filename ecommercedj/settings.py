@@ -102,7 +102,18 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
 
+EMAIL_HOST_USER = 'shaikhali6507@gmail.com'
+EMAIL_HOST_PASSWORD = 'opbn czuh ncww muoo' 
+
+RAZOR_KEY_ID = "rzp_test_kzIJlq2Y69RPQe"
+RAZOR_KEY_SECRET = "GuiQeFlzEAKk8m6lNia5xQ7D"
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/

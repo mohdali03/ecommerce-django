@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pay Now</title>
+</head>
+<body>
+    <form id="paymentForm" action="{{ callback_url }}" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="order_id" value="{{ order_id }}">
+        <input type="hidden" name="razorpay_amount" value="{{ razorpay_amount }}">
+        <input type="hidden" id="razorpay_payment_id" name="razorpay_payment_id" value="">
+        <input type="hidden" id="razorpay_order_id" name="razorpay_order_id" value="">
+        <input type="hidden" id="razorpay_signature" name="razorpay_signature" value="">
+    </form>
+    
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        window.onload = function() {
+            var options = {
+                "key": "{{ razorpay_merchant_key }}",
+                "amount": "{{ razorpay_amount }}", 
+                "currency": "{{ currency }}",
+                "order_id": "{{ razorpay_order_id }}",
+                "name": "Your Shop Name",
+                "description": "Test Transaction",
+                "image": "https://your-logo-url.com/logo.png",
+                "prefill": {
+                    "name": "{{ name }}",
+                    "email": "{{ email }}"
+                },
+                "theme": {
+                    "color": "#F37254"
+                },
+                "handler": function (response) {
+                    document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+                    document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+                    document.getElementById('razorpay_signature').value = response.razorpay_signature;
+                    document.getElementById('paymentForm').submit();
+
+                }
+            };
+            var rzp = new Razorpay(options);
+            rzp.open();
+        };
+    </script>
+</body>
+</html>

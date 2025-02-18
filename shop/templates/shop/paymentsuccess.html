@@ -1,0 +1,47 @@
+{% extends 'shop/basic.html' %}
+{% block title %}Payment Success{% endblock %}
+{% block body %}
+<div class="container">
+  <div class="col my-4">
+    <h1>Thank You! Your Payment was Successful</h1>
+    {% if order %}
+      <p>Your order ID is: {{ order.order_id }}</p>
+      <form method="post" action="{% url 'send_order_email' %}">
+        {% csrf_token %}
+        <!-- Pass the original items_json to your email function -->
+        <input type="hidden" name="items_json" value='{{ original_items_json|safe }}'>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Qty</th>
+              <th>Name</th>
+              <th>Price ($)</th>
+              <th>Total ($)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.product_name }}</td>
+              <td>{{ item.price }}</td>
+              <td>{{ item.total }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p><strong>Grand Total: ${{ total_amount }}</strong></p>
+        <button type="submit" class="btn btn-primary">Send Order via Email</button>
+      </form>
+    {% else %}
+      <p>Order details not found.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block js %}
+<script>
+// Log the items JSON in case you need to verify it in JavaScript:
+console.log(JSON.parse('{{ original_items_json|escapejs }}'));
+</script>
+{% endblock %}
