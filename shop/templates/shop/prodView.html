@@ -1,67 +1,132 @@
 {% extends 'shop/basic.html' %}
 
-{% block title%} {{product.product_name}} {% endblock %}
+{% block title %} {{ product.product_name }} {% endblock %}
+
 {% block body %}
 <div class="container my-4">
     <div class="row">
-    <div class="col-md-4">
-    <div class="row">
-        <img src="/{{product.image}}" width="233px" height="385px">
-    </div>
-        <div class="row">
-            <button class="btn btn-primary mx-3">Buy Now</button>
-            <button class="btn btn-primary">Add To Cart</button>
+        <div class="col-md-4">
+            <img src="/{{ product.image }}" class="card-img-top img-fluid" style="object-fit: contain; width: 100%; height: 275px;">
+            <div class="row mt-3 justify-content-center">
+                <span id="divpr{{ product.id }}" class="divpr">
+                    <button id="pr{{ product.id }}" class="btn btn-primary mx-2 cart">Add To Cart</button>
+                </span>
+            </div>
         </div>
-
+        <div class="col-md-8">
+            <h5 id="namepr{{ product.id }}">{{ product.product_name }}</h5>
+            <p><b>Rs. <span id="pricepr{{ product.id }}">{{ product.price }}</span></b></p>
+            {% if product.qty < 10 %}
+            <div class="text-danger text-center mt-2">
+                <span id="qtypr{{ product.id }}">Few Left: {{ product.qty }}</span>
+            </div>
+            {% endif %}
+            <p>{{ product.desc }}</p>
+        </div>
     </div>
-
-    <div class="col-md-8">
-        <h5>{{product.product_name}}</h5>
-        <p><b>Rs.{{product.price}} </b></p>
-        <p>{{product.desc}}</p>
-
-
-    </div>
-    </div>
-
-
 </div>
-
-
-
-
 {% endblock %}
-
-
-
 
 {% block js %}
 <script>
-console.log('working');
-if(localStorage.getItem('cart') == null){
-var cart = {};
-}
-else
-{
-cart = JSON.parse(localStorage.getItem('cart'));
-document.getElementById('cart').innerHTML = Object.keys(cart).length;
-}
-$('.cart').click(function(){
-console.log('clicked');
-var idstr = this.id.toString();
-console.log(idstr);
-if (cart[idstr] !=undefined){
-cart[idstr] = cart[idstr] + 1;
-}
-else
-{
-cart[idstr] = 1;
-}
-console.log(cart);
-localStorage.setItem('cart', JSON.stringify(cart));
-document.getElementById('cart').innerHTML = Object.keys(cart).length;
+
+let cart = localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : {};
+
+document.addEventListener("click", function(event) {
+    if (event.target.classList.contains("cart")) {
+        let idstr = event.target.id.replace("pr", "");
+        let qtyElem = document.getElementById("qtypr" + idstr);
+        let availableQty = qtyElem ? parseInt(qtyElem.innerText.split(": ")[1] || 9999) : 9999;
+
+        if (cart[idstr]) {
+            if (cart[idstr][0] < availableQty) {
+                cart[idstr][0]++;
+            } else {
+                alert(`Only ${availableQty} items left in stock!`);
+                return;
+            }
+        } else {
+            let name = document.getElementById("namepr" + idstr).innerText;
+            let price = parseInt(document.getElementById("pricepr" + idstr).innerText);
+            cart[idstr] = [1, name, price];
+        }
+        updateCart();
+    }
 });
-$('#popcart').popover();
-document.getElementById("popcart").setAttribute('data-content', '<h5>Cart for your items in my shopping cart</h5>');
+
+document.addEventListener("click", function(event) {
+    if (event.target.classList.contains("plus")) {
+        let id = event.target.id.replace("plus", "");
+        let qtyElem = document.getElementById("qtypr" + id);
+        let availableQty = qtyElem ? parseInt(qtyElem.innerText.split(": ")[1] || 9999) : 9999;
+
+        if (cart[id][0] < availableQty) {
+            cart[id][0]++;
+            document.getElementById("val" + id).innerText = cart[id][0];
+        } else {
+            alert(`Only ${availableQty} items left in stock!`);
+        }
+        updateCart();
+    }
+});
+
+document.addEventListener("click", function(event) {
+    if (event.target.classList.contains("minus")) {
+        let id = event.target.id.replace("minus", "");
+
+        if (cart[id][0] > 1) {
+            cart[id][0]--;
+            document.getElementById("val" + id).innerText = cart[id][0];
+        } else {
+            delete cart[id];
+            document.getElementById("divpr" + id).innerHTML = `
+                <button id="pr${id}" class="btn btn-primary cart">Add to Cart</button>
+            `;
+        }
+        updateCart();
+    }
+});
+
+function updateCart() {
+    let sum = 0;
+    for (let item in cart) {
+        sum += cart[item][0];
+        let divId = 'divpr' + item;
+        if (document.getElementById(divId)) {
+            document.getElementById(divId).innerHTML = `
+                <button id="minus${item}" class="btn btn-primary minus">-</button>
+                <span id="val${item}">${cart[item][0]}</span>
+                <button id="plus${item}" class="btn btn-primary plus">+</button>
+            `;
+        }
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+    document.getElementById('cart').innerText = sum;
+    updatePopover();
+}
+
+function updatePopover() {
+    let popStr = "<h5>Your Shopping Cart</h5><div class='mx-2 my-2'>";
+    let i = 1;
+    for (let item in cart) {
+        popStr += `<b>${i}.</b> ${cart[item][1].slice(0, 19)}... Qty: ${cart[item][0]}<br>`;
+        i++;
+    }
+    popStr += `</div> <a href="{% url 'Checkout' %}"><button class='btn btn-primary' id ='checkout'>Checkout</button></a> 
+               <button class='btn btn-primary' onclick='clearCart()' id='clearCart'>Clear Cart</button>`;
+    document.getElementById('popcart').setAttribute('data-content', popStr);
+    $('#popcart').popover('show');
+}
+
+function clearCart() {
+    cart = {};
+    localStorage.removeItem('cart');
+    document.querySelectorAll('.divpr').forEach(div => {
+        div.innerHTML = `<button id="pr${div.id.replace('divpr', '')}" class="btn btn-primary cart">Add To Cart</button>`;
+    });
+    updateCart();
+}
+
+updateCart();
 </script>
 {% endblock %}

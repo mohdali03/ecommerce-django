@@ -1,3 +1,5 @@
+
+
 {% extends 'shop/basic.html' %}
 {% block title%} MyAwesomeCart - Best Ecommerce Website{% endblock %}
 {% block css %}
@@ -56,17 +58,21 @@ padding-right: 0;
             <div class="container carousel-inner no-padding">
                 <div class="carousel-item active">
                     {% for i in product %}
-                    <div class="col-xs-3 col-sm-3 col-md-3">
+                    <div class="col-xs-3 col-sm-3 col-md-3 ">
                         <div class="card align-items-center" style="width: 18rem;">
-                            <img src='/{{i.image}}' class="card-img-top" alt="...">
+                            <img src='{{i.image}}'  class="card-img-top img-fluid" style="object-fit: contain; width: 100%; height: 150px;"alt="...">
                             <div class="card-body">
                                 <h5 class="card-title" id="namepr{{i.id}}">{{i.product_name}}</h5>
-                                <p class="card-text">{{i.desc|slice:"0:53"}}...</p>
-                                <h6 class="card-title" >Price: <span id="pricepr{{i.id}}">{{i.price}}</span></h6>
+                                <p class="card-text">{{i.desc|slice:"0:30"}}...</p>
+                                <div class="card-title" style='display:flex; justify-content: space-between'> 
+                                    <p>Price: <span id="pricepr{{i.id}}">{{i.price}}</span> </p>  
+                                    <p id="qtypr{{i.id}}" class="text-danger">Few Left: {{i.qty}}</p>
+                                </div>
+                                    
                                 <span id="divpr{{i.id}}" class="divpr">
                                     <button id="pr{{i.id}}" class="btn btn-primary cart">Add To Cart</button>
                                 </span>
-                                <a href="/shop/products/{{i.id}}"><button id="qv{{i.id}}" class="btn btn-primary cart">QuickView</button></a>
+                                <a href="products/{{i.id}}"><button id="qv{{i.id}}" class="btn btn-primary cart">QuickView</button></a>
                             </div>
                         </div>
                     </div>
@@ -99,19 +105,28 @@ if (localStorage.getItem('cart') == null) {
     updateCart(cart);
 }
 
-// If the add to cart button is clicked, add/increment the item
-//$('.cart').click(function() {
     $('.divpr').on('click', 'button.cart', function(){
     var idstr = this.id.toString();
-    if (cart[idstr] != undefined) {
-        qty = cart[idstr][0] + 1;
-    } else {
-        qty = 1;
-        name = document.getElementById('name'+idstr).innerHTML;
-        price = document.getElementById('price'+idstr).innerHTML;
-        cart[idstr] = [qty, name, parseInt(price)];
+    let availableQty = parseInt(document.getElementById('qty' + idstr).innerHTML.split(': ')[1]);
 
+    if (cart[idstr] != undefined) {
+        if (cart[idstr][0] < availableQty) {
+            cart[idstr][0] += 1;
+        } else {
+            alert('Only ' + availableQty + ' items left in stock!');
+        }
+    } else {
+        if (availableQty > 0) {
+            qty = 1;
+            name = document.getElementById('name' + idstr).innerHTML;
+            price = document.getElementById('price' + idstr).innerHTML;
+            cart[idstr] = [qty, name, parseInt(price)];
+        } else {
+            alert('Out of stock!');
+        }
     }
+    
+    
     updateCart(cart);
 
 });
@@ -132,7 +147,7 @@ function updatePopover(cart) {
 
     }
 
-    popStr = popStr + "</div> <a href='/shop/checkout/'><button class='btn btn-primary' id ='checkout'>Checkout</button></a> <button class='btn btn-primary' onclick='clearCart()' id ='clearCart'>Clear Cart</button>     "
+    popStr = popStr + "</div> <a href='checkout/'><button class='btn btn-primary' id ='checkout'>Checkout</button></a> <button class='btn btn-primary' onclick='clearCart()' id ='clearCart'>Clear Cart</button>     "
     console.log(popStr);
     document.getElementById('popcart').setAttribute('data-content', popStr);
     $('#popcart').popover('show');
@@ -181,10 +196,18 @@ $('.divpr').on("click", "button.minus", function() {
 });
 
 $('.divpr').on("click", "button.plus", function() {
-    a = this.id.slice(6, );
-    cart['pr' + a][0] = cart['pr' + a][0] + 1;
-    document.getElementById('valpr' + a).innerHTML = cart['pr' + a][0];
+    let a = this.id.slice(6);
+    let availableQty = parseInt(document.getElementById('qtypr' + a).innerHTML.split(': ')[1]);
+
+    if (cart['pr' + a][0] < availableQty) {
+        cart['pr' + a][0] += 1;
+        document.getElementById('valpr' + a).innerHTML = cart['pr' + a][0];
+    } else {
+        alert('Only ' + availableQty + ' items left in stock!');
+    }
+
     updateCart(cart);
 });
+
 </script>
 {% endblock %}

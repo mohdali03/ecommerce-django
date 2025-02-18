@@ -2,6 +2,8 @@ import json
 from django.shortcuts import redirect, render
 from django.conf import settings
 
+from .forms import CheckoutForm
+
 from .models import OrderUpdate, Product, Contact, Orders
 from math import ceil
 from django.views.decorators.csrf import csrf_exempt
@@ -20,7 +22,6 @@ def index(request):
 
     allProds = []
     catprods = Product.objects.values('category', 'id')
-    print(catprods)
     cats = {item['category'] for item in catprods}
     for cat in cats:
         prod = Product.objects.filter(category=cat)
@@ -34,6 +35,7 @@ def index(request):
     # allProds = [[products, range(1, nSlides), nSlides],
     #             [products, range(1, nSlides), nSlides]]
     params = {'allProds':allProds}
+    print(params)
     return render(request, 'shop/index.html', params)
 
 def about(request):
@@ -50,48 +52,49 @@ def contact(request):
 
 def checkout(request):
     if request.method == "POST":
-        data = request.POST.dict()
-        data.pop("csrfmiddlewaretoken", None)
-        ad1, ad2 = data.pop("address1", None), data.pop("address2", None)
-        data["address"] = ad1 + " " + ad2
-        currency = 'INR'
-        
-        # Get amount from the POST data (in INR)
-        amount = request.POST.get('amount', '')
-        try:
-            amount_int = int(amount)
-        except ValueError:
-            return HttpResponse("Invalid amount")
-        
-        razorpay_amount = amount_int * 100
-        
-        razorpay_order = razorpay_client.order.create({
-            'amount': razorpay_amount,
-            'currency': currency,
-            'payment_capture': '0'
-        })
-        razorpay_order_id = razorpay_order['id']
-        
-        print(data)
-        order = Orders(**data)
-        order.save()
-        update = OrderUpdate(order_id=order.order_id, update_desc="The order has been placed")
-        update.save()
-        
-        context = {
-            'razorpay_order_id': razorpay_order_id,
-            'razorpay_merchant_key': settings.RAZOR_KEY_ID,
-            'razorpay_amount': razorpay_amount,  # in paise
-            'currency': currency,
-            'callback_url': 'http://127.0.0.1:8000/shop/paymenthandler/',
-            'order_id': order.order_id,
+        form = CheckoutForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            try:
+                amount_int = data.get('amount')
+            except (ValueError, TypeError):
+                return HttpResponse("Invalid amount")
+            razorpay_amount = amount_int * 100  # Convert INR to paise
 
-        }
-        print(context)
-        return render(request, 'shop/paytm.html', context=context)
-    return render(request, 'shop/checkout.html')
+            currency = 'INR'
+            razorpay_order = razorpay_client.order.create({
+                'amount': razorpay_amount,
+                'currency': currency,
+                'payment_capture': '0'
+            })
+            razorpay_order_id = razorpay_order['id']
 
+            # Create the order (commit=False allows us to set additional fields)
+            order = form.save(commit=False)
+            order.address = data.get('address')  # Combined address
+            order.amount = amount_int  # Save the amount in INR (if your model stores INR)
+            order.save()
 
+            # Create an order update record
+            update = OrderUpdate(order_id=order.order_id, update_desc="The order has been placed")
+            update.save()
+
+            context = {
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_merchant_key': settings.RAZOR_KEY_ID,
+                'razorpay_amount': razorpay_amount,  # in paise
+                'currency': currency,
+                'callback_url': 'http://127.0.0.1:8000/paymenthandler/',  # Ensure this URL is correct
+                'order_id': order.order_id,
+            }
+            print(context)
+            return render(request, 'shop/paytm.html', context=context)
+        else:
+            # If form is invalid, render the checkout page with errors
+            return render(request, 'shop/checkout.html', {'form': form})
+    else:
+        form = CheckoutForm()
+    return render(request, 'shop/checkout.html', {'form': form})
 @csrf_exempt
 def paymenthandler(request):
     if request.method == "POST":
@@ -164,6 +167,10 @@ def paymentsuccess(request):
                         'price': price,
                         'total': line_total,
                     })
+                    prod = Product.objects.filter(product_name=product_name).first()
+                    if prod:
+                        prod.qty = max(0, prod.qty - quantity)
+                        prod.save()
                     total_amount += line_total
                 # Return AFTER processing all items
                 return render(request, 'shop/paymentsuccess.html', {
@@ -203,16 +210,23 @@ def tracker(request):
 
     return render(request, 'shop/tracker.html')
 
-@csrf_exempt
-def handlerequest(req):
-    
-    pass
 
 
 def search(request):
     return render(request, 'shop/search.html')
 
+
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
 def productView(request, myid):
-    product=Product.objects.filter(id=myid).first()
+    product = Product.objects.get(id=myid)
     print(product)
-    return render(request, "shop/prodView.html", {'product': product})
+    similar_products = list(Product.objects.filter(category=product.category).exclude(id=product.id))
+    similar_groups = list(chunks(similar_products, 4))
+    return render(request, "shop/prodView.html", {
+        'product': product,
+        'similar_groups': similar_groups,
+    })

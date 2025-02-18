@@ -43,7 +43,7 @@ $('#trackerForm').submit(function(event) {
     };
     $.ajax({
             type: 'POST',
-            url: '/shop/tracker/',
+            url: '{% url 'TrackingStatus' %}',
             data: formData,
             encode: true
         })

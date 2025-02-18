@@ -15,9 +15,9 @@ from rangefilter.filters import (
 @admin.register(Product)
 class ProductAdmin(ImportExportModelAdmin):
     
-    list_display = ['product_image','product_name', 'price', 'category']
-    search_fields = ['product_name', 'price', 'category']
-    list_filter = [('pub_date', DateRangeFilterBuilder()) , 'price', 'category' ]
+    list_display = ['product_image','product_name', 'price', 'category', 'qty']
+    search_fields = ['product_name', 'price', 'category', 'qty']
+    list_filter = [('pub_date', DateRangeFilterBuilder()) , 'price', 'category', 'qty' ]
     def product_image(self,obj):
         if obj.image:
             return format_html('<img src="{}" width="75" height="50" style="object-fit: cover;" />', obj.image.url)

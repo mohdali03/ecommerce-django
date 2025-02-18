@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -41,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'import_export',
     'rangefilter',
-
     # 'shop',
 ]
 
@@ -108,12 +108,12 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587
-# add you email and app password 
-EMAIL_HOST_USER = 'xxxxxx@gmail.com'
-EMAIL_HOST_PASSWORD = 'xxxxxxx' 
-# Add your razor id and secret key 
-RAZOR_KEY_ID = "xxxxxxx"
-RAZOR_KEY_SECRET = "xxxxxxxx"
+
+EMAIL_HOST_USER = 'shaikhali6507@gmail.com'
+EMAIL_HOST_PASSWORD = 'opbn czuh ncww muoo' 
+
+RAZOR_KEY_ID = "rzp_test_kzIJlq2Y69RPQe"
+RAZOR_KEY_SECRET = "GuiQeFlzEAKk8m6lNia5xQ7D"
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
@@ -133,9 +133,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA = '/media/'
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
