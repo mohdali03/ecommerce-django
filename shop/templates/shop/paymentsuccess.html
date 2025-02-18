@@ -6,7 +6,7 @@
     <h1>Thank You! Your Payment was Successful</h1>
     {% if order %}
       <p>Your order ID is: {{ order.order_id }}</p>
-      <form method="post" action="{% url 'send_order_email' %}">
+      <form method="post" action="{% url 'Email_invoice' %}">
         {% csrf_token %}
         <!-- Pass the original items_json to your email function -->
         <input type="hidden" name="items_json" value='{{ original_items_json|safe }}'>

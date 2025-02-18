@@ -1,7 +1,7 @@
 
 from django.urls import path
 from . import views
-from .email import send_order_email 
+from .email import Email_invoice 
 
 urlpatterns = [
     path("", views.index, name="ShopHome"),
@@ -11,11 +11,8 @@ urlpatterns = [
     path("search/", views.search, name="Search"),
     path("products/<int:myid>", views.productView, name="ProductView"),
     path("checkout/", views.checkout, name="Checkout"),
-    # path('hadlerequest/', views.handlerequest, name="handler")
     path('paymentsuccess/', views.paymentsuccess, name='paymentsuccess'),
-    path('send_order_email/', send_order_email, name='send_order_email'),
-
+    path('Email_invoice/', Email_invoice, name='Email_invoice'),
     path('paymenthandler/', views.paymenthandler, name='paymenthandler'),
-
 ]
 

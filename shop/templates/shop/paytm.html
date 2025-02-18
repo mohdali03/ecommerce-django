@@ -21,8 +21,8 @@
                 "amount": "{{ razorpay_amount }}", 
                 "currency": "{{ currency }}",
                 "order_id": "{{ razorpay_order_id }}",
-                "name": "Your Shop Name",
-                "description": "Test Transaction",
+                "name": "Ecommerce Dj",
+                "description": "Django Ecommerce Payment",
                 "image": "https://your-logo-url.com/logo.png",
                 "prefill": {
                     "name": "{{ name }}",
@@ -36,7 +36,7 @@
                     document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
                     document.getElementById('razorpay_signature').value = response.razorpay_signature;
                     document.getElementById('paymentForm').submit();
-
+                    localStorage.clear();
                 }
             };
             var rzp = new Razorpay(options);

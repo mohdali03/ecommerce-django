@@ -2,11 +2,13 @@ import json
 from django.http import HttpResponse
 from django.core.mail import send_mail
 from django.conf import settings
+from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
 from .models import Orders
+from django.contrib import messages
 
 @csrf_exempt
-def send_order_email(request):
+def Email_invoice(request):
     if request.method == 'POST':
         # Get order id from session
         order_id = request.session.get('order_id', None)
@@ -58,8 +60,10 @@ def send_order_email(request):
         try:
             send_mail(subject, message, from_email, recipient, fail_silently=False)
         except Exception as e:
-            return HttpResponse("Failed to send email: " + str(e))
-        
-        return HttpResponse("Email sent successfully!")
+            messages.success(request, "Failed to send email: " + str(e))
+            return redirect('Email_invoice')
+
+        messages.success(request, f"{from_email} Email sent successfully!")
+        return redirect('ShopHome')
     else:
         return HttpResponse("Invalid request method.")
